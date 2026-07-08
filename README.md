@@ -2,6 +2,10 @@
 
 This repository contains the project for three guided workshops to explore various GitHub features. The project is a website for a fictional dog shelter, with a [Flask](https://flask.palletsprojects.com/en/stable/) backend using [SQLAlchemy](https://www.sqlalchemy.org/) and an [Astro](https://astro.build/) frontend using [Tailwind CSS](https://tailwindcss.com/).
 
+## Source repos
+- https://github.com/github-samples/pets-workshop.git (For the demo application and some test scenarios)
+- https://github.com/github/awesome-copilot (The the demo github workflow)
+
 ## What This Demo Is Trying To Achieve
 
 This demo is designed to show how GitHub Copilot can be used inside a human-in-the-loop workflow without bypassing review, approval, or repository controls. The goal is not just to show Copilot generating output, but to show where humans deliberately pause, approve context, review results, and hand work back into the normal pull request process.
