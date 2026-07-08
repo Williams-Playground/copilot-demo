@@ -29,7 +29,7 @@ Open [Create a fine-grained PAT](https://github.com/settings/personal-access-tok
 1. Resource owner is your user account, not an organization.
 2. Under Permissions, Account permissions, `Copilot Requests` is set to `Read`.
 3. Generate the token and copy the value once.
-4. Add it to the repository under Settings, Secrets and variables, Actions as `COPILOT_TOKEN`.
+4. Add it to the repository under Settings, Secrets and variables, Actions as `COPILOT_GITHUB_TOKEN`.
 
 Why this matters for the demo:
 
