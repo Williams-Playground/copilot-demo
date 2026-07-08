@@ -26,6 +26,7 @@ class TestApp(unittest.TestCase):
         mock_query_instance = MagicMock()
         mock_query.return_value = mock_query_instance
         mock_query_instance.join.return_value = mock_query_instance
+        mock_query_instance.filter.return_value = mock_query_instance
         mock_query_instance.count.return_value = len(dogs)
         mock_query_instance.offset.return_value = mock_query_instance
         mock_query_instance.limit.return_value = mock_query_instance
@@ -100,6 +101,99 @@ class TestApp(unittest.TestCase):
         self.assertTrue(isinstance(data['dogs'], list))
         self.assertEqual(len(data['dogs']), 1)
         self.assertEqual(set(data['dogs'][0].keys()), {'id', 'name', 'breed'})
+
+
+    @patch('app.db.session.query')
+    def test_get_dogs_filter_by_breed(self, mock_query):
+        """Test that breed filter is applied when breed param is provided"""
+        # Arrange
+        dog = self._create_mock_dog(1, "Buddy", "Labrador")
+        mock_instance = self._setup_query_mock(mock_query, [dog])
+
+        # Act
+        response = self.app.get('/api/dogs?breed=Labrador')
+
+        # Assert
+        self.assertEqual(response.status_code, 200)
+        data = json.loads(response.data)
+        self.assertEqual(len(data['dogs']), 1)
+        self.assertEqual(data['dogs'][0]['breed'], "Labrador")
+        # Verify filter was called (breed filter path)
+        mock_instance.filter.assert_called()
+
+    @patch('app.db.session.query')
+    def test_get_dogs_filter_available_only(self, mock_query):
+        """Test that available filter restricts results to available dogs"""
+        # Arrange
+        dog = self._create_mock_dog(1, "Buddy", "Labrador")
+        mock_instance = self._setup_query_mock(mock_query, [dog])
+
+        # Act
+        response = self.app.get('/api/dogs?available=true')
+
+        # Assert
+        self.assertEqual(response.status_code, 200)
+        data = json.loads(response.data)
+        self.assertEqual(len(data['dogs']), 1)
+        # Verify filter was called (availability filter path)
+        mock_instance.filter.assert_called()
+
+    @patch('app.db.session.query')
+    def test_get_dogs_no_filter_does_not_call_filter(self, mock_query):
+        """Test that no filters are applied when no filter params are provided"""
+        # Arrange
+        dog1 = self._create_mock_dog(1, "Buddy", "Labrador")
+        dog2 = self._create_mock_dog(2, "Max", "German Shepherd")
+        mock_instance = self._setup_query_mock(mock_query, [dog1, dog2])
+
+        # Act
+        response = self.app.get('/api/dogs')
+
+        # Assert
+        self.assertEqual(response.status_code, 200)
+        data = json.loads(response.data)
+        self.assertEqual(len(data['dogs']), 2)
+        # No filter should have been applied
+        mock_instance.filter.assert_not_called()
+
+    @patch('app.db.session.query')
+    def test_get_breeds(self, mock_query):
+        """Test successful retrieval of all breeds"""
+        # Arrange
+        breed1 = MagicMock()
+        breed1.name = "German Shepherd"
+        breed2 = MagicMock()
+        breed2.name = "Labrador"
+        mock_query_instance = MagicMock()
+        mock_query.return_value = mock_query_instance
+        mock_query_instance.order_by.return_value = mock_query_instance
+        mock_query_instance.all.return_value = [breed1, breed2]
+
+        # Act
+        response = self.app.get('/api/breeds')
+
+        # Assert
+        self.assertEqual(response.status_code, 200)
+        data = json.loads(response.data)
+        self.assertIn('breeds', data)
+        self.assertEqual(data['breeds'], ["German Shepherd", "Labrador"])
+
+    @patch('app.db.session.query')
+    def test_get_breeds_empty(self, mock_query):
+        """Test retrieval of breeds when none exist"""
+        # Arrange
+        mock_query_instance = MagicMock()
+        mock_query.return_value = mock_query_instance
+        mock_query_instance.order_by.return_value = mock_query_instance
+        mock_query_instance.all.return_value = []
+
+        # Act
+        response = self.app.get('/api/breeds')
+
+        # Assert
+        self.assertEqual(response.status_code, 200)
+        data = json.loads(response.data)
+        self.assertEqual(data['breeds'], [])
 
 
 if __name__ == '__main__':
