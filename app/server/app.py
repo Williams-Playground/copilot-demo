@@ -2,6 +2,7 @@ import os
 from typing import Dict, List, Any, Optional
 from flask import Flask, jsonify, request, Response
 from models import init_db, db, Dog, Breed
+from models.dog import AdoptionStatus
 
 # Get the server directory path
 base_dir: str = os.path.abspath(os.path.dirname(__file__))
@@ -14,19 +15,35 @@ app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 # Initialize the database with the app
 init_db(app)
 
+@app.route('/api/breeds', methods=['GET'])
+def get_breeds() -> Response:
+    breeds_query = db.session.query(Breed.id, Breed.name).order_by(Breed.name).all()
+    breeds_list: List[Dict[str, Any]] = [
+        {'id': b.id, 'name': b.name}
+        for b in breeds_query
+    ]
+    return jsonify({'breeds': breeds_list})
+
 @app.route('/api/dogs', methods=['GET'])
 def get_dogs() -> Response:
     page = request.args.get('page', 1, type=int)
     per_page = request.args.get('per_page', 6, type=int)
     page = max(1, page)
     per_page = max(1, min(per_page, 100))
+    breed_filter: Optional[str] = request.args.get('breed', None)
+    available_only: bool = request.args.get('available', 'false').lower() in ('true', '1')
 
     query = db.session.query(
         Dog.id, 
         Dog.name, 
         Breed.name.label('breed')
     ).join(Breed, Dog.breed_id == Breed.id)
-    
+
+    if breed_filter:
+        query = query.filter(Breed.name == breed_filter)
+    if available_only:
+        query = query.filter(Dog.status == AdoptionStatus.AVAILABLE)
+
     total = query.count()
     dogs_query = query.offset((page - 1) * per_page).limit(per_page).all()
     

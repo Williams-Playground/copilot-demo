@@ -9,11 +9,37 @@ let dogs = [];
 let page = 1;
 let totalPages = 1;
 let error: string | null = null;
+let breeds: { id: number; name: string }[] = [];
 
 const currentPage = Math.max(1, Number(Astro.url.searchParams.get('page')) || 1);
+const breedFilter = Astro.url.searchParams.get('breed') || '';
+const availableFilter = Astro.url.searchParams.get('available') === 'true';
+
+// Build the filter query string for pagination links
+function buildPageUrl(targetPage: number): string {
+  const params = new URLSearchParams({ page: String(targetPage) });
+  if (breedFilter) params.set('breed', breedFilter);
+  if (availableFilter) params.set('available', 'true');
+  return `/?${params.toString()}`;
+}
 
 try {
-  const response = await fetch(`${API_SERVER_URL}/api/dogs?page=${currentPage}&per_page=${PAGE_SIZE}`);
+  // Fetch breeds for the dropdown
+  const breedsResponse = await fetch(`${API_SERVER_URL}/api/breeds`);
+  if (breedsResponse.ok) {
+    const breedsData = await breedsResponse.json();
+    breeds = breedsData.breeds;
+  }
+} catch (_err) {
+  // Breeds fetch failure is non-fatal; dropdown will be empty
+}
+
+try {
+  const params = new URLSearchParams({ page: String(currentPage), per_page: String(PAGE_SIZE) });
+  if (breedFilter) params.set('breed', breedFilter);
+  if (availableFilter) params.set('available', 'true');
+
+  const response = await fetch(`${API_SERVER_URL}/api/dogs?${params.toString()}`);
   if (response.ok) {
     const data = await response.json();
     dogs = data.dogs;
@@ -34,6 +60,35 @@ try {
       <p class="text-xl text-slate-300">Find your perfect companion from our wonderful selection of dogs looking for their forever homes.</p>
     </div>
 
+    <form id="filter-form" method="get" action="/" class="flex flex-wrap gap-4 mb-6 items-end" data-testid="filter-form">
+      <div>
+        <label for="breed-filter" class="block text-sm text-slate-400 mb-1">Breed</label>
+        <select
+          id="breed-filter"
+          name="breed"
+          class="bg-slate-800 border border-slate-700 text-slate-200 rounded-lg px-3 py-2 focus:outline-none focus:border-blue-500"
+          data-testid="breed-filter"
+        >
+          <option value="">All breeds</option>
+          {breeds.map((b) => (
+            <option value={b.name} selected={b.name === breedFilter}>{b.name}</option>
+          ))}
+        </select>
+      </div>
+      <div class="flex items-center gap-2 pb-2">
+        <input
+          type="checkbox"
+          id="available-filter"
+          name="available"
+          value="true"
+          checked={availableFilter}
+          class="w-4 h-4 accent-blue-500"
+          data-testid="available-filter"
+        />
+        <label for="available-filter" class="text-slate-300 text-sm">Available only</label>
+      </div>
+    </form>
+
     {error ? (
       <div class="text-center py-12 bg-slate-800/50 backdrop-blur-sm rounded-xl border border-slate-700" data-testid="error-message">
         <p class="text-red-400">{error}</p>
@@ -46,7 +101,7 @@ try {
           <nav class="flex justify-center items-center gap-2 mt-10" data-testid="pagination">
             {page > 1 ? (
               <a
-                href={`/?page=${page - 1}`}
+                href={buildPageUrl(page - 1)}
                 class="px-4 py-2 rounded-lg bg-slate-800 border border-slate-700 text-slate-300 hover:border-blue-500/50 hover:text-blue-400 transition-colors"
                 data-testid="pagination-prev"
               >
@@ -64,7 +119,7 @@ try {
 
             {page < totalPages ? (
               <a
-                href={`/?page=${page + 1}`}
+                href={buildPageUrl(page + 1)}
                 class="px-4 py-2 rounded-lg bg-slate-800 border border-slate-700 text-slate-300 hover:border-blue-500/50 hover:text-blue-400 transition-colors"
                 data-testid="pagination-next"
               >
@@ -81,3 +136,20 @@ try {
     )}
   </div>
 </Layout>
+
+<script>
+  const form = document.getElementById('filter-form') as HTMLFormElement;
+  const breedSelect = document.getElementById('breed-filter') as HTMLSelectElement;
+  const availableCheckbox = document.getElementById('available-filter') as HTMLInputElement;
+
+  function submitFilters() {
+    // Reset to page 1 when a filter changes
+    const params = new URLSearchParams();
+    if (breedSelect.value) params.set('breed', breedSelect.value);
+    if (availableCheckbox.checked) params.set('available', 'true');
+    window.location.href = params.toString() ? `/?${params.toString()}` : '/';
+  }
+
+  breedSelect.addEventListener('change', submitFilters);
+  availableCheckbox.addEventListener('change', submitFilters);
+</script>
