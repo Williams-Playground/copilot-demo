@@ -1,4 +1,4 @@
-# Human-In-The-Loop Demo Agenda
+# Office Hours: Copilot PR Reviews and GitHub Actions
 
 Use the demo files in order. The flow is split into three live demo segments after setup and approvals.
 
