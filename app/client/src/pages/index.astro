@@ -31,7 +31,7 @@ try {
     breeds = breedsData.breeds;
   }
 } catch (_err) {
-  // Breeds fetch failure is non-fatal; dropdown will show all breeds option only
+  // Breeds fetch failure is non-fatal; breed filtering will be unavailable
   console.error('Failed to fetch breeds for filter dropdown:', _err);
 }
 
