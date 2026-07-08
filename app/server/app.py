@@ -77,7 +77,23 @@ def get_dog(id: int) -> tuple[Response, int] | Response:
     
     return jsonify(dog)
 
-## HERE
+@app.route('/api/breeds', methods=['GET'])
+def get_breeds() -> Response:
+    """Retrieve all dog breeds from the database.
+    
+    Returns:
+        Response: JSON response containing a list of all breeds with their IDs and names.
+            Example: {'breeds': [{'id': 1, 'name': 'Labrador'}, {'id': 2, 'name': 'Golden Retriever'}]}
+    """
+    breeds_query = db.session.query(Breed.id, Breed.name).all()
+    breeds_list: List[Dict[str, Any]] = [
+        {
+            'id': breed.id,
+            'name': breed.name
+        }
+        for breed in breeds_query
+    ]
+    return jsonify({'breeds': breeds_list})
 
 if __name__ == '__main__':
     app.run(debug=True, port=5100) # Port 5100 to avoid macOS conflicts
