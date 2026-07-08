@@ -26,6 +26,8 @@ class TestApp(unittest.TestCase):
         mock_query_instance = MagicMock()
         mock_query.return_value = mock_query_instance
         mock_query_instance.join.return_value = mock_query_instance
+        mock_query_instance.filter.return_value = mock_query_instance
+        mock_query_instance.order_by.return_value = mock_query_instance
         mock_query_instance.count.return_value = len(dogs)
         mock_query_instance.offset.return_value = mock_query_instance
         mock_query_instance.limit.return_value = mock_query_instance
@@ -100,6 +102,62 @@ class TestApp(unittest.TestCase):
         self.assertTrue(isinstance(data['dogs'], list))
         self.assertEqual(len(data['dogs']), 1)
         self.assertEqual(set(data['dogs'][0].keys()), {'id', 'name', 'breed'})
+
+
+    @patch('app.db.session.query')
+    def test_get_dogs_filter_by_breed(self, mock_query):
+        """Test filtering dogs by breed applies a filter on the breed name column"""
+        dog = self._create_mock_dog(1, "Buddy", "Labrador")
+        mock_instance = self._setup_query_mock(mock_query, [dog])
+
+        response = self.app.get('/api/dogs?breed=Labrador')
+
+        self.assertEqual(response.status_code, 200)
+        data = json.loads(response.data)
+        self.assertEqual(len(data['dogs']), 1)
+        self.assertEqual(data['dogs'][0]['breed'], 'Labrador')
+        mock_instance.filter.assert_called_once()
+        filter_arg = mock_instance.filter.call_args[0][0]
+        self.assertIn('breeds.name', str(filter_arg))
+
+    @patch('app.db.session.query')
+    def test_get_dogs_filter_available(self, mock_query):
+        """Test filtering dogs by availability applies a filter on the dog status column"""
+        dog = self._create_mock_dog(1, "Buddy", "Labrador")
+        mock_instance = self._setup_query_mock(mock_query, [dog])
+
+        response = self.app.get('/api/dogs?available=true')
+
+        self.assertEqual(response.status_code, 200)
+        data = json.loads(response.data)
+        self.assertEqual(len(data['dogs']), 1)
+        mock_instance.filter.assert_called_once()
+        filter_arg = mock_instance.filter.call_args[0][0]
+        self.assertIn('dogs.status', str(filter_arg))
+
+    @patch('app.db.session.query')
+    def test_get_breeds(self, mock_query):
+        """Test retrieval of all breeds"""
+        breed1 = MagicMock()
+        breed1.id = 1
+        breed1.name = 'Labrador'
+        breed2 = MagicMock()
+        breed2.id = 2
+        breed2.name = 'German Shepherd'
+
+        mock_instance = MagicMock()
+        mock_query.return_value = mock_instance
+        mock_instance.order_by.return_value = mock_instance
+        mock_instance.all.return_value = [breed1, breed2]
+
+        response = self.app.get('/api/breeds')
+
+        self.assertEqual(response.status_code, 200)
+        data = json.loads(response.data)
+        self.assertIn('breeds', data)
+        self.assertEqual(len(data['breeds']), 2)
+        self.assertEqual(data['breeds'][0]['name'], 'Labrador')
+        self.assertEqual(data['breeds'][1]['name'], 'German Shepherd')
 
 
 if __name__ == '__main__':
