@@ -106,7 +106,7 @@ class TestApp(unittest.TestCase):
 
     @patch('app.db.session.query')
     def test_get_dogs_filter_by_breed(self, mock_query):
-        """Test filtering dogs by breed"""
+        """Test filtering dogs by breed applies a single filter for the breed name"""
         dog = self._create_mock_dog(1, "Buddy", "Labrador")
         mock_instance = self._setup_query_mock(mock_query, [dog])
 
@@ -116,11 +116,11 @@ class TestApp(unittest.TestCase):
         data = json.loads(response.data)
         self.assertEqual(len(data['dogs']), 1)
         self.assertEqual(data['dogs'][0]['breed'], 'Labrador')
-        mock_instance.filter.assert_called()
+        mock_instance.filter.assert_called_once()
 
     @patch('app.db.session.query')
     def test_get_dogs_filter_available(self, mock_query):
-        """Test filtering dogs by availability"""
+        """Test filtering dogs by availability applies a single filter for dog status"""
         dog = self._create_mock_dog(1, "Buddy", "Labrador")
         mock_instance = self._setup_query_mock(mock_query, [dog])
 
@@ -129,7 +129,7 @@ class TestApp(unittest.TestCase):
         self.assertEqual(response.status_code, 200)
         data = json.loads(response.data)
         self.assertEqual(len(data['dogs']), 1)
-        mock_instance.filter.assert_called()
+        mock_instance.filter.assert_called_once()
 
     @patch('app.db.session.query')
     def test_get_breeds(self, mock_query):

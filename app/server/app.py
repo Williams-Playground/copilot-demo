@@ -17,10 +17,10 @@ init_db(app)
 
 @app.route('/api/breeds', methods=['GET'])
 def get_breeds() -> Response:
-    breeds_query = db.session.query(Breed.id, Breed.name).order_by(Breed.name).all()
+    breeds_result = db.session.query(Breed.id, Breed.name).order_by(Breed.name).all()
     breeds_list: List[Dict[str, Any]] = [
         {'id': b.id, 'name': b.name}
-        for b in breeds_query
+        for b in breeds_result
     ]
     return jsonify({'breeds': breeds_list})
 
