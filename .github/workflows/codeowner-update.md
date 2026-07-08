@@ -54,6 +54,9 @@ Only include files whose paths start with one of these directories:
 - `workflows/`
 - `hooks/`
 - `plugins/`
+- `scenarios/`
+- `app/`
+- `demo/`
 
 If **no files** match these directories, exit with a `noop` message: "No files in agents/, skills/, instructions/, workflows/, hooks/, or plugins/ directories were found in this PR."
 
