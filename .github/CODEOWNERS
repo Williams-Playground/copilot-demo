@@ -1,9 +1,5 @@
 # CODEOWNERS
 
-* @WilliamQuaye
-
-/app/server/ @WilliamQuaye
-/app/client/ @WilliamQuaye
 /demo/ @WilliamQuaye
 /scenarios/ @WilliamQuaye
 /.github/workflows/ @WilliamQuaye
