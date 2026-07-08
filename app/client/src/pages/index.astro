@@ -43,7 +43,13 @@ try {
   error = `Error: ${err instanceof Error ? err.message : String(err)}`;
 }
 
-const paginationBase = `/?breed=${encodeURIComponent(currentBreed)}&available=${availableOnly}`;
+const buildPageUrl = (pageNum: number): string => {
+  const params = new URLSearchParams();
+  params.set('page', String(pageNum));
+  if (currentBreed) params.set('breed', currentBreed);
+  if (availableOnly) params.set('available', 'true');
+  return `/?${params.toString()}`;
+};
 ---
 
 <Layout title="Williams-Playground - Find Your Forever Friend">
@@ -89,7 +95,7 @@ const paginationBase = `/?breed=${encodeURIComponent(currentBreed)}&available=${
           <nav class="flex justify-center items-center gap-2 mt-10" data-testid="pagination">
             {page > 1 ? (
               <a
-                href={`${paginationBase}&page=${page - 1}`}
+                href={buildPageUrl(page - 1)}
                 class="px-4 py-2 rounded-lg bg-slate-800 border border-slate-700 text-slate-300 hover:border-blue-500/50 hover:text-blue-400 transition-colors"
                 data-testid="pagination-prev"
               >
@@ -107,7 +113,7 @@ const paginationBase = `/?breed=${encodeURIComponent(currentBreed)}&available=${
 
             {page < totalPages ? (
               <a
-                href={`${paginationBase}&page=${page + 1}`}
+                href={buildPageUrl(page + 1)}
                 class="px-4 py-2 rounded-lg bg-slate-800 border border-slate-700 text-slate-300 hover:border-blue-500/50 hover:text-blue-400 transition-colors"
                 data-testid="pagination-next"
               >
